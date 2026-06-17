@@ -109,13 +109,16 @@ def gerar_chegadas_dia(rng):
     horas_expandidas = np.repeat(horas, n_por_hora)
     chegada = horas_expandidas * 60 + rng.uniform(0, 60, size=total)
 
-    soc_inicial = rng.beta(2, 5, size=total) * 70 + 10
-    soc_alvo = rng.uniform(80, 100, size=total)
-    cap_bateria = rng.choice([40, 60, 77, 100], size=total)
-    potencia = 50
+    # Nível de bateria na chegada (carros raramente chegam totalmente vazios)
+    soc_inicial = rng.beta(2, 5, size=total) * 70 + 10        # 10% a 80%
+    # Carregador rápido tipicamente carrega até ~80-90% (depois a taxa cai muito)
+    soc_alvo = rng.uniform(70, 90, size=total)
+    cap_bateria = rng.choice([40, 60, 77, 100], size=total)   # kWh
+    potencia_carregador = 100                                 # kW (carregador DC rápido)
 
-    tempo_servico = (soc_alvo - soc_inicial) / 100 * cap_bateria / potencia * 60
-    tempo_servico = np.clip(tempo_servico, 10, 90)
+    delta_soc = np.maximum(soc_alvo - soc_inicial, 5)         # mínimo 5% de carga
+    tempo_servico = delta_soc / 100 * cap_bateria / potencia_carregador * 60
+    tempo_servico = np.clip(tempo_servico, 5, 60)             # entre 5 e 60 min
 
     ordem = np.argsort(chegada)
     return chegada[ordem], tempo_servico[ordem], horas_expandidas[ordem]
