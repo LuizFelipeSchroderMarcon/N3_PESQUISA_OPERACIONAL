@@ -371,6 +371,8 @@ col_g3, col_g4 = st.columns(2)
 with col_g3:
     st.markdown("**Ocupação dos Carregadores por Hora do Dia**")
     taxa_chegada = list(TAXA_CHEGADA_POR_HORA.values())
+    ocupacao_pct = np.minimum(ocupacao_hora / n_totens, 1.0) * 100  # taxa real por totem, em %
+
     fig3 = go.Figure()
     fig3.add_trace(go.Bar(
         x=list(range(24)),
@@ -383,18 +385,18 @@ with col_g3:
     ))
     fig3.add_trace(go.Scatter(
         x=list(range(24)),
-        y=ocupacao_hora,
+        y=ocupacao_pct,
         mode="lines+markers",
-        name="Ocupação (h/carregador)",
+        name="Ocupação por totem (%)",
         line=dict(color="#00d4ff", width=2.5),
         marker=dict(size=6),
-        hovertemplate="Hora: %{x}h<br>Ocupação: %{y:.2f} h<extra></extra>"
+        hovertemplate="Hora: %{x}h<br>Ocupação: %{y:.1f}%<extra></extra>"
     ))
     fig3.update_layout(
         plot_bgcolor="#1a1f2e", paper_bgcolor="#1a1f2e",
         font_color="#cdd6e0", height=320,
         xaxis=dict(tickmode="linear", dtick=2, title="Hora do dia", gridcolor="#2d3a4f"),
-        yaxis=dict(title="Ocupação média (h)", gridcolor="#2d3a4f"),
+        yaxis=dict(title="Ocupação média por totem (%)", range=[0, 105], gridcolor="#2d3a4f"),
         yaxis2=dict(title="Chegadas/hora (λ)", overlaying="y", side="right",
                     showgrid=False, tickfont=dict(color="#9c88ff")),
         legend=dict(orientation="h", y=-0.25, bgcolor="rgba(0,0,0,0)"),
@@ -419,7 +421,7 @@ with col_g4:
     ))
     fig4.add_trace(go.Scatter(
         x=list(range(1, len(medias_acum) + 1)),
-        y=medias_acum - intervalo,
+        y=np.maximum(medias_acum - intervalo, 0),
         fill="tonexty", mode="lines",
         line=dict(width=0),
         fillcolor="rgba(0, 212, 255, 0.15)",
